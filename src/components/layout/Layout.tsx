@@ -4,6 +4,7 @@ import { LayoutDashboard, Lightbulb, Trophy, Users, Menu, X, Rocket, Zap, Search
 import { GameButton } from '../ui/GameButton';
 import { useStore } from '../../store';
 import { gsap } from 'gsap';
+import { motion } from 'framer-motion';
 
 export const Layout: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
@@ -52,7 +53,7 @@ export const Layout: React.FC = () => {
       gsap.fromTo(
         contentRef.current,
         { autoAlpha: 0, y: 10 },
-        { autoAlpha: 1, y: 0, duration: 0.35, ease: 'power2.out' }
+        { autoAlpha: 1, y: 0, duration: 0.35, ease: 'power2.out', clearProps: 'transform' }
       );
     });
     return () => ctx.revert();
@@ -122,19 +123,33 @@ export const Layout: React.FC = () => {
                   key={item.path}
                   to={item.path}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={({ isActive }) => `
-                    flex items-center gap-4 px-5 py-4 rounded-2xl font-black uppercase tracking-wider border-3 transition-all
+                  className={`
+                    relative flex items-center gap-4 px-5 py-4 rounded-2xl font-black uppercase tracking-wider transition-all
                     ${isActive 
-                      ? 'bg-brand-blue text-white shadow-brawl translate-y-[-2px]' 
-                      : 'bg-black/5 dark:bg-white/5 border-transparent text-gray-500 dark:text-gray-400 hover:bg-black/10 dark:hover:bg-white/10 hover:text-brand-dark dark:hover:text-white hover:border-brand-dark/20'}
+                      ? 'text-white z-10' 
+                      : 'bg-black/5 dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:bg-black/10 dark:hover:bg-white/10 hover:text-brand-dark dark:hover:text-white'}
                   `}
                 >
-                  <item.icon size={24} strokeWidth={isActive ? 2 : 2} />
-                  <span className={isActive ? '' : ''}>{item.label}</span>
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeTab"
+                      className="absolute inset-0 bg-brand-blue rounded-2xl shadow-brawl"
+                      initial={false}
+                      transition={{ 
+                        type: "spring", 
+                        stiffness: 500,
+                        damping: 30
+                      }}
+                    />
+                  )}
+                  <span className="relative z-10">
+                    <item.icon size={24} strokeWidth={2} />
+                  </span>
+                  <span className="relative z-10">{item.label}</span>
                 </NavLink>
               );
             })}
-          </div>
+            </div>
 
           <div className="mt-auto space-y-6">
              {/* Dark Mode Toggle */}
@@ -152,6 +167,21 @@ export const Layout: React.FC = () => {
                   </div>
                 </button>
              </div>
+
+              {/* Sign Out Button */}
+              {user && (
+                <div className="px-2 mt-3">
+                  <button
+                    onClick={() => useStore.getState().signOut()}
+                    className="w-full flex items-center justify-between px-4 py-3 rounded-2xl bg-red-500 text-white font-black uppercase text-sm hover:bg-red-600 transition-colors shadow-brawl active:translate-y-1"
+                  >
+                    <span className="flex items-center gap-2">
+                      <LogOut size={18} />
+                      Sign Out
+                    </span>
+                  </button>
+                </div>
+              )}
 
              <div className="pt-6 border-t-4 border-brand-dark">
                 <div className="flex items-center gap-4 px-2">

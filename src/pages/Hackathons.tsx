@@ -4,6 +4,7 @@ import { GameCard, GameButton, Badge } from '../components/ui';
 import { Gift, Link2, Plus, X, Pencil, Trash2 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { HackathonStatus } from '../types';
+import toast from 'react-hot-toast';
 
 export const Hackathons: React.FC = () => {
   const { hackathons, ideas, linkIdeaToHackathon, addHackathon, updateHackathon, deleteHackathon } = useStore();
@@ -90,6 +91,34 @@ export const Hackathons: React.FC = () => {
 
   const availableIdeas = getAvailableIdeas();
 
+  const showDeleteToast = (label: string, onConfirm: () => void) => {
+    toast.custom((t) => (
+      <div className="pointer-events-auto w-[320px] rounded-2xl border-2 border-brand-dark bg-white dark:bg-gray-900 p-4 shadow-brawl">
+        <p className="font-bold text-brand-dark dark:text-white mb-3">Delete "{label}"?</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Linked ideas will be unassigned.</p>
+        <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => toast.dismiss(t.id)}
+            className="px-3 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-700 text-gray-500 hover:text-brand-dark hover:border-brand-dark transition-colors text-sm font-bold"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              toast.dismiss(t.id);
+              onConfirm();
+            }}
+            className="px-3 py-2 rounded-lg border-2 border-brand-red bg-brand-red text-white hover:brightness-95 transition-colors text-sm font-bold"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    ), { duration: 8000 });
+  };
+
   return (
     <div className="max-w-5xl mx-auto">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
@@ -145,7 +174,7 @@ export const Hackathons: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => {
-                            if (confirm('Delete this hackathon?')) deleteHackathon(hackathon.id);
+                            showDeleteToast(hackathon.name, () => deleteHackathon(hackathon.id));
                           }}
                           className="p-2 rounded-lg border-2 border-gray-200 dark:border-gray-700 text-gray-500 hover:text-brand-red hover:border-brand-red transition-colors"
                           aria-label="Delete hackathon"

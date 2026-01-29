@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useStore } from './store';
 import { Layout } from './components/layout/Layout';
 import { Dashboard } from './pages/Dashboard';
@@ -33,6 +34,24 @@ const ProtectedRoute: React.FC = () => {
   return <Outlet />;
 };
 
+const AnimatedOutlet: React.FC = () => {
+  const location = useLocation();
+  
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={location.pathname}
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+      >
+        <Outlet />
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
 const App: React.FC = () => {
   const initAuth = useStore(state => state.initAuth);
 
@@ -56,7 +75,7 @@ const App: React.FC = () => {
         <Route path="/auth" element={<Auth />} />
         
         <Route element={<ProtectedRoute />}>
-          <Route element={<Layout />}>
+          <Route element={<Layout><AnimatedOutlet /></Layout>}>
             <Route index element={<Dashboard />} />
             <Route path="ideas" element={<Ideas />} />
             <Route path="ideas/:id" element={<IdeaDetail />} />

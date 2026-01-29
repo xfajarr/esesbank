@@ -1,17 +1,23 @@
 import React, { useState } from 'react';
 import { useStore } from '../store';
 import { GameCard, GameButton, ProgressBar, Badge } from '../components/ui';
-import { Search, Filter, Plus, Zap } from 'lucide-react';
+import { Search, Filter, Plus, Zap, Pencil, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { IdeaStatus } from '../types';
+import toast from 'react-hot-toast';
 
 export const Ideas: React.FC = () => {
   const navigate = useNavigate();
-  const { ideas, addIdea } = useStore();
+  const { ideas, addIdea, updateIdea, deleteIdea } = useStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<IdeaStatus | 'All'>('All');
   const [showModal, setShowModal] = useState(false);
-  const [newTitle, setNewTitle] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [formState, setFormState] = useState({
+    title: '',
+    description: '',
+    status: 'Draft' as IdeaStatus
+  });
 
   const filteredIdeas = ideas.filter(idea => {
     const matchesSearch = idea.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -20,16 +26,67 @@ export const Ideas: React.FC = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const handleCreate = (e: React.FormEvent) => {
+  const showDeleteToast = (label: string, onConfirm: () => void) => {
+    toast.custom((t) => (
+      <div className="pointer-events-auto w-[320px] rounded-2xl border-2 border-brand-dark bg-white dark:bg-gray-900 p-4 shadow-brawl">
+        <p className="font-bold text-brand-dark dark:text-white mb-3">Delete "{label}"?</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">This action cannot be undone.</p>
+        <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => toast.dismiss(t.id)}
+            className="px-3 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-700 text-gray-500 hover:text-brand-dark hover:border-brand-dark transition-colors text-sm font-bold"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              toast.dismiss(t.id);
+              onConfirm();
+            }}
+            className="px-3 py-2 rounded-lg border-2 border-brand-red bg-brand-red text-white hover:brightness-95 transition-colors text-sm font-bold"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    ), { duration: 8000 });
+  };
+
+  const openCreate = () => {
+    setEditingId(null);
+    setFormState({ title: '', description: '', status: 'Draft' });
+    setShowModal(true);
+  };
+
+  const openEdit = (idea: typeof ideas[number]) => {
+    setEditingId(idea.id);
+    setFormState({ title: idea.title, description: idea.description, status: idea.status });
+    setShowModal(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTitle.trim()) return;
-    
-    addIdea({
-      title: newTitle,
-      description: 'New idea waiting for details...'
-    });
-    setNewTitle('');
+    if (!formState.title.trim()) return;
+
+    if (editingId) {
+      await updateIdea(editingId, {
+        title: formState.title,
+        description: formState.description,
+        status: formState.status
+      });
+    } else {
+      await addIdea({
+        title: formState.title,
+        description: formState.description || 'New idea waiting for details...',
+        status: formState.status
+      });
+    }
+
     setShowModal(false);
+    setEditingId(null);
+    setFormState({ title: '', description: '', status: 'Draft' });
   };
 
   return (
@@ -39,7 +96,7 @@ export const Ideas: React.FC = () => {
            <h1 className="text-5xl font-black text-brand-dark dark:text-white italic">IDEA BANK</h1>
            <p className="text-brand-blue dark:text-brand-green font-black uppercase text-sm tracking-widest mt-1">Vault of brilliance.</p>
         </div>
-        <GameButton size="lg" onClick={() => setShowModal(true)} className="hover:scale-105 transition-transform">
+        <GameButton size="lg" onClick={openCreate} className="hover:scale-105 transition-transform">
           <Plus size={28} strokeWidth={4} />
           Create Idea
         </GameButton>
@@ -89,7 +146,31 @@ export const Ideas: React.FC = () => {
                   label={idea.status} 
                   color={idea.status === 'Draft' ? 'gray' : idea.status === 'Building' ? 'green' : 'blue'} 
                />
-               <span className="text-xs font-bold text-gray-400">Lvl {idea.level}</span>
+               <div className="flex items-center gap-2">
+                 <span className="text-xs font-bold text-gray-400">Lvl {idea.level}</span>
+                 <button
+                   type="button"
+                   onClick={(e) => {
+                     e.stopPropagation();
+                     openEdit(idea);
+                   }}
+                   className="p-1.5 rounded-lg border-2 border-gray-200 dark:border-gray-700 text-gray-400 hover:text-brand-blue hover:border-brand-blue transition-colors"
+                   aria-label="Edit idea"
+                 >
+                   <Pencil size={14} />
+                 </button>
+                 <button
+                   type="button"
+                   onClick={(e) => {
+                     e.stopPropagation();
+                     showDeleteToast(idea.title, () => deleteIdea(idea.id));
+                   }}
+                   className="p-1.5 rounded-lg border-2 border-gray-200 dark:border-gray-700 text-gray-400 hover:text-brand-red hover:border-brand-red transition-colors"
+                   aria-label="Delete idea"
+                 >
+                   <Trash2 size={14} />
+                 </button>
+               </div>
             </div>
             
             <h3 className="text-2xl font-black mb-2 line-clamp-2 dark:text-white">{idea.title}</h3>
@@ -109,7 +190,7 @@ export const Ideas: React.FC = () => {
         
         {/* Empty State Add Button */}
         <button 
-          onClick={() => setShowModal(true)}
+          onClick={openCreate}
           className="h-64 rounded-2xl border-4 border-dashed border-gray-300 dark:border-gray-600 flex flex-col items-center justify-center text-gray-400 dark:text-gray-500 hover:text-brand-blue hover:border-brand-blue hover:bg-blue-50 dark:hover:bg-gray-800 transition-all group"
         >
           <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 group-hover:bg-blue-100 flex items-center justify-center mb-3 transition-colors">
@@ -123,8 +204,10 @@ export const Ideas: React.FC = () => {
       {showModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
           <GameCard className="w-full max-w-md animate-in fade-in zoom-in duration-200">
-            <h2 className="text-2xl font-black mb-4 dark:text-white">Start something new</h2>
-            <form onSubmit={handleCreate}>
+            <h2 className="text-2xl font-black mb-4 dark:text-white">
+              {editingId ? 'Edit Idea' : 'Start something new'}
+            </h2>
+            <form onSubmit={handleSubmit}>
               <div className="mb-6">
                 <label className="block text-sm font-bold text-gray-500 dark:text-gray-400 mb-2">Idea Name</label>
                 <input 
@@ -132,13 +215,38 @@ export const Ideas: React.FC = () => {
                   type="text" 
                   className="w-full px-4 py-3 rounded-xl border-2 border-brand-dark dark:border-gray-500 dark:bg-gray-800 dark:text-white focus:ring-4 focus:ring-brand-yellow/30 focus:outline-none font-bold text-lg"
                   placeholder="e.g., Uber for Cats"
-                  value={newTitle}
-                  onChange={e => setNewTitle(e.target.value)}
+                  value={formState.title}
+                  onChange={e => setFormState({ ...formState, title: e.target.value })}
                 />
               </div>
+              <div className="mb-6">
+                <label className="block text-sm font-bold text-gray-500 dark:text-gray-400 mb-2">Description</label>
+                <textarea
+                  className="w-full px-4 py-3 rounded-xl border-2 border-brand-dark dark:border-gray-500 dark:bg-gray-800 dark:text-white focus:ring-4 focus:ring-brand-yellow/30 focus:outline-none font-bold text-sm min-h-[110px] resize-none"
+                  placeholder="Short summary..."
+                  value={formState.description}
+                  onChange={e => setFormState({ ...formState, description: e.target.value })}
+                />
+              </div>
+              <div className="mb-6">
+                <label className="block text-sm font-bold text-gray-500 dark:text-gray-400 mb-2">Status</label>
+                <select
+                  className="w-full px-4 py-3 rounded-xl border-2 border-brand-dark dark:border-gray-500 dark:bg-gray-800 dark:text-white focus:ring-4 focus:ring-brand-yellow/30 focus:outline-none font-bold"
+                  value={formState.status}
+                  onChange={e => setFormState({ ...formState, status: e.target.value as IdeaStatus })}
+                >
+                  <option value="Draft">Draft</option>
+                  <option value="Exploring">Exploring</option>
+                  <option value="Building">Building</option>
+                  <option value="Submitted">Submitted</option>
+                </select>
+              </div>
               <div className="flex gap-3 justify-end">
-                <GameButton type="button" variant="ghost" onClick={() => setShowModal(false)}>Cancel</GameButton>
-                <GameButton type="submit">Create Idea</GameButton>
+                <GameButton type="button" variant="ghost" onClick={() => {
+                  setShowModal(false);
+                  setEditingId(null);
+                }}>Cancel</GameButton>
+                <GameButton type="submit">{editingId ? 'Save Changes' : 'Create Idea'}</GameButton>
               </div>
             </form>
           </GameCard>

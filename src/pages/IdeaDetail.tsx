@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { GameCard, GameButton, Badge, ProgressBar } from '../components/ui';
 import { ArrowLeft, FileText, Layers, Trophy, Edit3, Check, Trash2, CheckCircle, Circle, Plus, MessageSquare, Send } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export const IdeaDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -41,10 +42,32 @@ export const IdeaDetail: React.FC = () => {
   };
 
   const handleDelete = () => {
-    if(confirm('Are you sure you want to delete this idea?')) {
-      deleteIdea(idea.id);
-      navigate('/ideas');
-    }
+    toast.custom((t) => (
+      <div className="pointer-events-auto w-[320px] rounded-2xl border-2 border-brand-dark bg-white dark:bg-gray-900 p-4 shadow-brawl">
+        <p className="font-bold text-brand-dark dark:text-white mb-3">Delete "{idea.title}"?</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">This action cannot be undone.</p>
+        <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => toast.dismiss(t.id)}
+            className="px-3 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-700 text-gray-500 hover:text-brand-dark hover:border-brand-dark transition-colors text-sm font-bold"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              toast.dismiss(t.id);
+              deleteIdea(idea.id);
+              navigate('/ideas');
+            }}
+            className="px-3 py-2 rounded-lg border-2 border-brand-red bg-brand-red text-white hover:brightness-95 transition-colors text-sm font-bold"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    ), { duration: 8000 });
   };
 
   const handleAddTask = (e: React.FormEvent) => {
