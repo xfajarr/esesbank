@@ -51,7 +51,7 @@ export const Ideas: React.FC = () => {
           </button>
         </div>
       </div>
-    ), { duration: 8000 });
+    ), { duration: 8000, position: 'top-center' });
   };
 
   const openCreate = () => {

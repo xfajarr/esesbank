@@ -67,7 +67,7 @@ export const IdeaDetail: React.FC = () => {
           </button>
         </div>
       </div>
-    ), { duration: 8000 });
+    ), { duration: 8000, position: 'top-center' });
   };
 
   const handleAddTask = (e: React.FormEvent) => {

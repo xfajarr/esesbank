@@ -116,7 +116,7 @@ export const Hackathons: React.FC = () => {
           </button>
         </div>
       </div>
-    ), { duration: 8000 });
+    ), { duration: 8000, position: 'top-center' });
   };
 
   return (
