@@ -1,0 +1,82 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #F0F4F8;
+    background-image: 
+      linear-gradient(45deg, #E2E8F0 12%, transparent 12%, transparent 88%, #E2E8F0 88%, #E2E8F0),
+      linear-gradient(135deg, #E2E8F0 12%, transparent 12%, transparent 88%, #E2E8F0 88%, #E2E8F0);
+    background-size: 40px 40px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .dark body {
+    background-color: #0A0F1E;
+    background-image: 
+      linear-gradient(45deg, #161C2D 12%, transparent 12%, transparent 88%, #161C2D 88%, #161C2D),
+      linear-gradient(135deg, #161C2D 12%, transparent 12%, transparent 88%, #161C2D 88%, #161C2D);
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 12px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-left: 2px solid #1E272E;
+  }
+  .dark ::-webkit-scrollbar-track {
+    background: #1C2631;
+    border-left: 2px solid #000;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #FFC700;
+    border: 2px solid #1E272E;
+    border-radius: 6px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #EBB800;
+  }
+}
+
+@layer utilities {
+  .brawl-button-outline {
+    color: white;
+    text-shadow:
+      -2px -2px 0 #1E272E,
+       0px -2px 0 #1E272E,
+       2px -2px 0 #1E272E,
+      -2px  0px 0 #1E272E,
+       2px  0px 0 #1E272E,
+      -2px  2px 0 #1E272E,
+       0px  2px 0 #1E272E,
+       2px  2px 0 #1E272E,
+       4px  4px 0 rgba(0,0,0,0.3);
+  }
+  
+  .dark .brawl-button-outline {
+    text-shadow: 
+      -2px -2px 0 #000,  
+       0px -2px 0 #000,
+       2px -2px 0 #000,
+      -2px  0px 0 #000,
+       2px  0px 0 #000,
+      -2px  2px 0 #000,
+       0px  2px 0 #000,
+       2px  2px 0 #000,
+       4px  4px 0 rgba(0,0,0,0.5);
+  }
+
+  /* Hide scrollbar for cleaner look in filter banks */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
